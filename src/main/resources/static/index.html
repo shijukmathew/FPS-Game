@@ -1,148 +1,179 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no"/>
+  <meta name="mobile-web-app-capable" content="yes"/>
+  <meta name="apple-mobile-web-app-capable" content="yes"/>
   <title>NEXUS PROTOCOL</title>
   <link rel="stylesheet" href="styles.css"/>
 </head>
 <body>
 
-<!-- ── WebGL Canvas ─────────────────────────────── -->
 <canvas id="renderCanvas"></canvas>
 
-<!-- ── Menu Screen ──────────────────────────────── -->
 <div class="overlay" id="menu-screen">
   <div class="menu-scanlines"></div>
   <div class="menu-content">
-    <div class="menu-subtitle">// CLASSIFIED MISSION BRIEFING //</div>
+    <div class="menu-eyebrow">// CLASSIFIED MISSION //</div>
     <div class="menu-title">NEXUS<br/>PROTOCOL</div>
-    <div class="menu-tagline">Survive the swarm. Protect the grid.</div>
+    <div class="menu-tagline">Eliminate the swarm. Protect the grid.</div>
 
-    <button class="menu-btn" onclick="startGame()">INITIATE SEQUENCE</button>
+    <button class="menu-btn" onclick="startGame()">DEPLOY</button>
 
     <div class="menu-controls">
-      <div class="ctrl-row"><span class="key">W A S D</span> Move</div>
-      <div class="ctrl-row"><span class="key">MOUSE</span> Look</div>
-      <div class="ctrl-row"><span class="key">CLICK</span> Fire</div>
-      <div class="ctrl-row"><span class="key">R</span> Reload</div>
-      <div class="ctrl-row"><span class="key">ESC</span> Pause</div>
-      <div class="ctrl-row"><span class="key">?</span> Survive</div>
+      <div class="ctrl-row"><span class="key">W A S D</span><span>Move</span></div>
+      <div class="ctrl-row"><span class="key">ARROWS</span><span>Move, horizontal reversed</span></div>
+      <div class="ctrl-row"><span class="key">MOUSE</span><span>Aim</span></div>
+      <div class="ctrl-row"><span class="key">CLICK / SPACE</span><span>Fire</span></div>
+      <div class="ctrl-row"><span class="key">SHIFT</span><span>Sprint</span></div>
+      <div class="ctrl-row"><span class="key">R</span><span>Reload</span></div>
+      <div class="ctrl-row"><span class="key">C</span><span>Reset view</span></div>
+      <div class="ctrl-row"><span class="key">ESC</span><span>Pause</span></div>
     </div>
-    <div class="menu-version">v1.0 · NEXUS PROTOCOL · WebGL ENGINE</div>
+
+    <div class="menu-mobile-note" id="mobile-note" style="display:none">
+      Mobile: D-pad to move, drag to aim, FIRE button to shoot
+    </div>
+
+    <div class="menu-version">v3.0 Â· BABYLON.JS Â· WebGL</div>
   </div>
 </div>
 
-<!-- ── Pointer Lock Overlay ─────────────────────── -->
 <div class="overlay" id="lock-overlay" style="display:none">
   <div class="lock-box">
-    <div class="lock-icon">🎯</div>
+    <div class="lock-icon">TARGET</div>
     <div class="lock-title">Click to Resume</div>
-    <div class="lock-sub">PRESS ESC TO UNLOCK MOUSE</div>
+    <div class="lock-sub">MOUSE IS UNLOCKED</div>
   </div>
 </div>
 
-<!-- ── HUD ──────────────────────────────────────── -->
 <div id="hud" style="display:none">
-
-  <!-- Crosshair -->
   <div id="crosshair"></div>
 
-  <!-- Health — bottom left -->
+  <div id="target-panel">
+    <div class="hud-label">TARGET</div>
+    <div id="target-name">SWEEP TO LOCK</div>
+    <div id="target-hint">Aim at a hostile, then press Space or click to fire.</div>
+  </div>
+
+  <button id="recenter-btn" onclick="recenterView()">RESET VIEW</button>
+
   <div id="health-panel">
-    <div class="hud-label">Integrity</div>
-    <div class="bar-track">
-      <div id="health-fill"></div>
-    </div>
+    <div class="hud-label">INTEGRITY</div>
+    <div class="bar-track"><div id="health-fill"></div></div>
     <div id="health-value">100 HP</div>
   </div>
 
-  <!-- Ammo — bottom right -->
   <div id="ammo-panel">
     <div id="ammo-value">30</div>
     <div id="ammo-label">ENERGY CELL</div>
   </div>
 
-  <!-- Score — top center -->
   <div id="score-panel">
     <div id="score-value">0</div>
-    <div id="score-label">Score</div>
+    <div id="score-label">SCORE</div>
   </div>
 
-  <!-- Wave — top right -->
   <div id="wave-panel">
     <div id="wave-value">WAVE 1</div>
-    <div id="wave-label">Current Wave</div>
+    <div id="wave-label">CURRENT WAVE</div>
   </div>
 
-  <!-- Enemies left — top left -->
   <div id="enemies-panel">
-    <div id="enemies-value">—</div>
-    <div id="enemies-label">Hostiles</div>
+    <div id="enemies-value">-</div>
+    <div id="enemies-label">HOSTILES</div>
   </div>
 
-  <!-- Kill feed — right middle -->
   <div id="kill-feed"></div>
 
-  <!-- Reload bar — bottom right above ammo -->
   <div id="reload-bar-wrap">
     <div class="bar-track" style="height:3px">
       <div id="reload-bar-fill"></div>
     </div>
-    <div id="reload-bar-label" class="hud-label">RELOADING</div>
+    <div class="hud-label" style="text-align:right;margin-top:3px">RELOADING</div>
   </div>
 </div>
 
-<!-- ── Wave Announcement ────────────────────────── -->
-<div id="wave-announce">
-  <div id="announce-text"></div>
-</div>
-
-<!-- ── Damage Flash ──────────────────────────────── -->
+<div id="wave-announce"><div id="announce-text"></div></div>
 <div id="damage-flash"></div>
 
-<!-- ── Game Over Screen ─────────────────────────── -->
+<div id="mobile-controls" style="display:none">
+  <div id="dpad">
+    <div class="dpad-top">
+      <button class="dpad-btn"
+        ontouchstart="mobileKey('f',true)" ontouchend="mobileKey('f',false)"
+        onmousedown="mobileKey('f',true)"  onmouseup="mobileKey('f',false)">^</button>
+    </div>
+    <div class="dpad-mid">
+      <button class="dpad-btn"
+        ontouchstart="mobileKey('l',true)" ontouchend="mobileKey('l',false)"
+        onmousedown="mobileKey('l',true)"  onmouseup="mobileKey('l',false)">&lt;</button>
+      <div class="dpad-center">+</div>
+      <button class="dpad-btn"
+        ontouchstart="mobileKey('r',true)" ontouchend="mobileKey('r',false)"
+        onmousedown="mobileKey('r',true)"  onmouseup="mobileKey('r',false)">&gt;</button>
+    </div>
+    <div class="dpad-bot">
+      <button class="dpad-btn"
+        ontouchstart="mobileKey('b',true)" ontouchend="mobileKey('b',false)"
+        onmousedown="mobileKey('b',true)"  onmouseup="mobileKey('b',false)">v</button>
+    </div>
+  </div>
+
+  <div id="action-btns">
+    <button id="fire-btn"
+      ontouchstart="mobileFireStart()" ontouchend="mobileFireStop()"
+      onmousedown="mobileFireStart()"  onmouseup="mobileFireStop()">
+      FIRE<br/><span>SHOOT</span>
+    </button>
+    <button id="reload-btn"
+      ontouchstart="reload()" onmousedown="reload()">
+      R<br/><span>RELOAD</span>
+    </button>
+  </div>
+</div>
+
 <div class="overlay" id="gameover-screen" style="display:none">
   <div class="go-content">
     <div class="go-title">OPERATIVE<br/>DOWN</div>
-    <div class="go-sub">NEXUS PROTOCOL — MISSION FAILED</div>
-
+    <div class="go-sub">NEXUS PROTOCOL - MISSION FAILED</div>
     <div class="go-stats">
       <div class="go-stat">
-        <span class="go-stat-value" id="go-score">0</span>
-        <span class="go-stat-label">Score</span>
+        <span class="go-val" id="go-score">0</span>
+        <span class="go-lbl">SCORE</span>
       </div>
       <div class="go-stat">
-        <span class="go-stat-value" id="go-wave">1</span>
-        <span class="go-stat-label">Wave</span>
+        <span class="go-val" id="go-wave">1</span>
+        <span class="go-lbl">WAVE</span>
       </div>
       <div class="go-stat">
-        <span class="go-stat-value" id="go-kills">0</span>
-        <span class="go-stat-label">Kills</span>
+        <span class="go-val" id="go-kills">0</span>
+        <span class="go-lbl">KILLS</span>
       </div>
     </div>
-
     <button class="menu-btn" onclick="startGame()">REDEPLOY</button>
     <br/>
-    <button class="menu-btn"
-            style="background:transparent;color:#0ff;border:1px solid rgba(0,255,255,0.4);box-shadow:none;margin-top:12px"
-            onclick="showMenu()">MAIN MENU</button>
+    <button class="menu-btn menu-btn-ghost" onclick="showMenu()">MAIN MENU</button>
   </div>
 </div>
 
-<!-- ── Babylon.js + Materials Library ───────────── -->
 <script src="https://cdn.babylonjs.com/babylon.js"></script>
 <script src="https://cdn.babylonjs.com/materialsLibrary/babylonjs.materials.min.js"></script>
 <script src="game.js"></script>
-
 <script>
-function showMenu() {
-  if (typeof scene !== 'undefined' && scene) scene.dispose();
-  document.getElementById('gameover-screen').style.display = 'none';
-  document.getElementById('hud').style.display = 'none';
-  document.getElementById('menu-screen').style.display = 'flex';
-  document.exitPointerLock && document.exitPointerLock();
-}
+  if ('ontouchstart' in window || navigator.maxTouchPoints > 0) {
+    document.getElementById('mobile-note').style.display = 'block';
+  }
+
+  function showMenu() {
+    if (typeof scene !== 'undefined' && scene) scene.dispose();
+    document.getElementById('gameover-screen').style.display = 'none';
+    document.getElementById('hud').style.display = 'none';
+    document.getElementById('menu-screen').style.display = 'flex';
+    document.exitPointerLock && document.exitPointerLock();
+  }
 </script>
 </body>
 </html>
+
