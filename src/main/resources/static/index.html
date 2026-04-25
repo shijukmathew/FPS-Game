@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>NEXUS PROTOCOL</title>
+  <link rel="stylesheet" href="styles.css"/>
+</head>
+<body>
+
+<!-- ── WebGL Canvas ─────────────────────────────── -->
+<canvas id="renderCanvas"></canvas>
+
+<!-- ── Menu Screen ──────────────────────────────── -->
+<div class="overlay" id="menu-screen">
+  <div class="menu-scanlines"></div>
+  <div class="menu-content">
+    <div class="menu-subtitle">// CLASSIFIED MISSION BRIEFING //</div>
+    <div class="menu-title">NEXUS<br/>PROTOCOL</div>
+    <div class="menu-tagline">Survive the swarm. Protect the grid.</div>
+
+    <button class="menu-btn" onclick="startGame()">INITIATE SEQUENCE</button>
+
+    <div class="menu-controls">
+      <div class="ctrl-row"><span class="key">W A S D</span> Move</div>
+      <div class="ctrl-row"><span class="key">MOUSE</span> Look</div>
+      <div class="ctrl-row"><span class="key">CLICK</span> Fire</div>
+      <div class="ctrl-row"><span class="key">R</span> Reload</div>
+      <div class="ctrl-row"><span class="key">ESC</span> Pause</div>
+      <div class="ctrl-row"><span class="key">?</span> Survive</div>
+    </div>
+    <div class="menu-version">v1.0 · NEXUS PROTOCOL · WebGL ENGINE</div>
+  </div>
+</div>
+
+<!-- ── Pointer Lock Overlay ─────────────────────── -->
+<div class="overlay" id="lock-overlay" style="display:none">
+  <div class="lock-box">
+    <div class="lock-icon">🎯</div>
+    <div class="lock-title">Click to Resume</div>
+    <div class="lock-sub">PRESS ESC TO UNLOCK MOUSE</div>
+  </div>
+</div>
+
+<!-- ── HUD ──────────────────────────────────────── -->
+<div id="hud" style="display:none">
+
+  <!-- Crosshair -->
+  <div id="crosshair"></div>
+
+  <!-- Health — bottom left -->
+  <div id="health-panel">
+    <div class="hud-label">Integrity</div>
+    <div class="bar-track">
+      <div id="health-fill"></div>
+    </div>
+    <div id="health-value">100 HP</div>
+  </div>
+
+  <!-- Ammo — bottom right -->
+  <div id="ammo-panel">
+    <div id="ammo-value">30</div>
+    <div id="ammo-label">ENERGY CELL</div>
+  </div>
+
+  <!-- Score — top center -->
+  <div id="score-panel">
+    <div id="score-value">0</div>
+    <div id="score-label">Score</div>
+  </div>
+
+  <!-- Wave — top right -->
+  <div id="wave-panel">
+    <div id="wave-value">WAVE 1</div>
+    <div id="wave-label">Current Wave</div>
+  </div>
+
+  <!-- Enemies left — top left -->
+  <div id="enemies-panel">
+    <div id="enemies-value">—</div>
+    <div id="enemies-label">Hostiles</div>
+  </div>
+
+  <!-- Kill feed — right middle -->
+  <div id="kill-feed"></div>
+
+  <!-- Reload bar — bottom right above ammo -->
+  <div id="reload-bar-wrap">
+    <div class="bar-track" style="height:3px">
+      <div id="reload-bar-fill"></div>
+    </div>
+    <div id="reload-bar-label" class="hud-label">RELOADING</div>
+  </div>
+</div>
+
+<!-- ── Wave Announcement ────────────────────────── -->
+<div id="wave-announce">
+  <div id="announce-text"></div>
+</div>
+
+<!-- ── Damage Flash ──────────────────────────────── -->
+<div id="damage-flash"></div>
+
+<!-- ── Game Over Screen ─────────────────────────── -->
+<div class="overlay" id="gameover-screen" style="display:none">
+  <div class="go-content">
+    <div class="go-title">OPERATIVE<br/>DOWN</div>
+    <div class="go-sub">NEXUS PROTOCOL — MISSION FAILED</div>
+
+    <div class="go-stats">
+      <div class="go-stat">
+        <span class="go-stat-value" id="go-score">0</span>
+        <span class="go-stat-label">Score</span>
+      </div>
+      <div class="go-stat">
+        <span class="go-stat-value" id="go-wave">1</span>
+        <span class="go-stat-label">Wave</span>
+      </div>
+      <div class="go-stat">
+        <span class="go-stat-value" id="go-kills">0</span>
+        <span class="go-stat-label">Kills</span>
+      </div>
+    </div>
+
+    <button class="menu-btn" onclick="startGame()">REDEPLOY</button>
+    <br/>
+    <button class="menu-btn"
+            style="background:transparent;color:#0ff;border:1px solid rgba(0,255,255,0.4);box-shadow:none;margin-top:12px"
+            onclick="showMenu()">MAIN MENU</button>
+  </div>
+</div>
+
+<!-- ── Babylon.js + Materials Library ───────────── -->
+<script src="https://cdn.babylonjs.com/babylon.js"></script>
+<script src="https://cdn.babylonjs.com/materialsLibrary/babylonjs.materials.min.js"></script>
+<script src="game.js"></script>
+
+<script>
+function showMenu() {
+  if (typeof scene !== 'undefined' && scene) scene.dispose();
+  document.getElementById('gameover-screen').style.display = 'none';
+  document.getElementById('hud').style.display = 'none';
+  document.getElementById('menu-screen').style.display = 'flex';
+  document.exitPointerLock && document.exitPointerLock();
+}
+</script>
+</body>
+</html>
