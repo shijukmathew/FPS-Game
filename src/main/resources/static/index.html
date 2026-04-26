@@ -33,7 +33,7 @@
     </div>
 
     <div class="menu-mobile-note" id="mobile-note" style="display:none">
-      Mobile: D-pad to move, drag to aim, FIRE button to shoot
+      Mobile: D-pad to move, drag the screen to aim, pinch to zoom, FIRE to shoot
     </div>
 
     <div class="menu-version">v3.0 Â· BABYLON.JS Â· WebGL</div>
@@ -102,33 +102,33 @@
   <div id="dpad">
     <div class="dpad-top">
       <button class="dpad-btn"
-        ontouchstart="mobileKey('f',true)" ontouchend="mobileKey('f',false)"
+        ontouchstart="event.preventDefault();mobileKey('f',true)" ontouchend="event.preventDefault();mobileKey('f',false)"
         onmousedown="mobileKey('f',true)"  onmouseup="mobileKey('f',false)">^</button>
     </div>
     <div class="dpad-mid">
       <button class="dpad-btn"
-        ontouchstart="mobileKey('l',true)" ontouchend="mobileKey('l',false)"
+        ontouchstart="event.preventDefault();mobileKey('l',true)" ontouchend="event.preventDefault();mobileKey('l',false)"
         onmousedown="mobileKey('l',true)"  onmouseup="mobileKey('l',false)">&lt;</button>
       <div class="dpad-center">+</div>
       <button class="dpad-btn"
-        ontouchstart="mobileKey('r',true)" ontouchend="mobileKey('r',false)"
+        ontouchstart="event.preventDefault();mobileKey('r',true)" ontouchend="event.preventDefault();mobileKey('r',false)"
         onmousedown="mobileKey('r',true)"  onmouseup="mobileKey('r',false)">&gt;</button>
     </div>
     <div class="dpad-bot">
       <button class="dpad-btn"
-        ontouchstart="mobileKey('b',true)" ontouchend="mobileKey('b',false)"
+        ontouchstart="event.preventDefault();mobileKey('b',true)" ontouchend="event.preventDefault();mobileKey('b',false)"
         onmousedown="mobileKey('b',true)"  onmouseup="mobileKey('b',false)">v</button>
     </div>
   </div>
 
   <div id="action-btns">
     <button id="fire-btn"
-      ontouchstart="mobileFireStart()" ontouchend="mobileFireStop()"
+      ontouchstart="event.preventDefault();mobileFireStart()" ontouchend="event.preventDefault();mobileFireStop()"
       onmousedown="mobileFireStart()"  onmouseup="mobileFireStop()">
       FIRE<br/><span>SHOOT</span>
     </button>
     <button id="reload-btn"
-      ontouchstart="reload()" onmousedown="reload()">
+      ontouchstart="event.preventDefault();reload()" onmousedown="reload()">
       R<br/><span>RELOAD</span>
     </button>
   </div>

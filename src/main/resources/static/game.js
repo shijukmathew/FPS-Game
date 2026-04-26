@@ -7,6 +7,7 @@ const CFG = {
   sprintSpeed: 0.42,
   moveSmoothing: 0.14,
   lookSensitivity: 0.0022,
+  mobileLookSensitivity: 0.0038,
   arenaSize: 110,
   arenaPad: 7,
 
@@ -119,6 +120,14 @@ const canvas = document.getElementById('renderCanvas');
 const KEYS = new Set();
 const isMobile = ('ontouchstart' in window) || navigator.maxTouchPoints > 0;
 const mobileMove = { f: 0, b: 0, l: 0, r: 0 };
+const mobileLook = {
+  active: false,
+  pointerId: null,
+  lastX: 0,
+  lastY: 0,
+  pinchStart: 0,
+  fovStart: 1.08,
+};
 
 const $ = id => document.getElementById(id);
 const el = {
@@ -220,6 +229,7 @@ function createScene() {
   createWeapon();
   setupGlowLayer();
   bindSceneInput();
+  bindMobileLook();
   spawnWave(1);
 }
 
@@ -1099,9 +1109,84 @@ function bindSceneInput() {
     if (pointerInfo.type !== BABYLON.PointerEventTypes.POINTERDOWN) return;
     if (pointerInfo.event.button !== 0) return;
 
-    if (!isMobile && document.pointerLockElement !== canvas) canvas.requestPointerLock();
+    if (isMobile) return;
+    if (document.pointerLockElement !== canvas) canvas.requestPointerLock();
     else shoot();
   });
+}
+
+function bindMobileLook() {
+  if (!isMobile || canvas.dataset.mobileLookBound === 'true') return;
+  canvas.dataset.mobileLookBound = 'true';
+
+  canvas.addEventListener('touchstart', event => {
+    if (S.phase !== 'playing') return;
+    event.preventDefault();
+
+    if (event.touches.length === 1) {
+      const touch = event.touches[0];
+      mobileLook.active = true;
+      mobileLook.pointerId = touch.identifier;
+      mobileLook.lastX = touch.clientX;
+      mobileLook.lastY = touch.clientY;
+    } else if (event.touches.length === 2) {
+      mobileLook.active = false;
+      mobileLook.pinchStart = touchDistance(event.touches[0], event.touches[1]);
+      mobileLook.fovStart = camera ? camera.fov : 1.08;
+    }
+  }, { passive: false });
+
+  canvas.addEventListener('touchmove', event => {
+    if (!camera || S.phase !== 'playing') return;
+    event.preventDefault();
+
+    if (event.touches.length === 2) {
+      const dist = touchDistance(event.touches[0], event.touches[1]);
+      if (mobileLook.pinchStart > 0) {
+        camera.fov = clamp(mobileLook.fovStart * (mobileLook.pinchStart / dist), 0.72, 1.2);
+      }
+      return;
+    }
+
+    const touch = [...event.touches].find(item => item.identifier === mobileLook.pointerId);
+    if (!touch || !mobileLook.active) return;
+
+    const dx = touch.clientX - mobileLook.lastX;
+    const dy = touch.clientY - mobileLook.lastY;
+    mobileLook.lastX = touch.clientX;
+    mobileLook.lastY = touch.clientY;
+
+    camera.rotation.y += dx * CFG.mobileLookSensitivity;
+    camera.rotation.x += dy * CFG.mobileLookSensitivity;
+    camera.rotation.x = clamp(camera.rotation.x, -0.72, 0.42);
+    weaponTargetPoint = null;
+  }, { passive: false });
+
+  canvas.addEventListener('touchend', event => {
+    if (event.touches.length === 0) {
+      mobileLook.active = false;
+      mobileLook.pointerId = null;
+      mobileLook.pinchStart = 0;
+    } else if (event.touches.length === 1) {
+      const touch = event.touches[0];
+      mobileLook.active = true;
+      mobileLook.pointerId = touch.identifier;
+      mobileLook.lastX = touch.clientX;
+      mobileLook.lastY = touch.clientY;
+    }
+  }, { passive: false });
+
+  canvas.addEventListener('touchcancel', () => {
+    mobileLook.active = false;
+    mobileLook.pointerId = null;
+    mobileLook.pinchStart = 0;
+  }, { passive: false });
+}
+
+function touchDistance(a, b) {
+  const dx = a.clientX - b.clientX;
+  const dy = a.clientY - b.clientY;
+  return Math.sqrt(dx * dx + dy * dy);
 }
 
 function mobileKey(dir, down) {
@@ -1134,6 +1219,12 @@ function applyKeyMovement(dt) {
   if (backPressed) target.addInPlace(forward.scale(-1));
   if (leftPressed) target.addInPlace(right.scale(-1));
   if (rightPressed) target.addInPlace(right);
+  if (isMobile) {
+    if (mobileMove.f) target.addInPlace(forward);
+    if (mobileMove.b) target.addInPlace(forward.scale(-1));
+    if (mobileMove.l) target.addInPlace(right.scale(-1));
+    if (mobileMove.r) target.addInPlace(right);
+  }
 
   const moveSpeed = KEYS.has('ShiftLeft') || KEYS.has('ShiftRight') ? CFG.sprintSpeed : CFG.playerSpeed;
   if (target.lengthSquared() > 0.001) {
@@ -1198,18 +1289,6 @@ function gameLoop(dt) {
   S.totalTime += dt;
   applyKeyMovement(dt);
   updateAimAssist();
-
-  if (isMobile && (mobileMove.f || mobileMove.b || mobileMove.l || mobileMove.r)) {
-    const forward = camera.getTarget().subtract(camera.position);
-    forward.y = 0;
-    if (forward.lengthSquared() > 0.001) forward.normalize();
-    const right = BABYLON.Vector3.Cross(forward, BABYLON.Axis.Y).normalize();
-    const speed = CFG.playerSpeed * 0.85;
-    if (mobileMove.f) camera.position.addInPlace(forward.scale(speed));
-    if (mobileMove.b) camera.position.addInPlace(forward.scale(-speed));
-    if (mobileMove.l) camera.position.addInPlace(right.scale(-speed));
-    if (mobileMove.r) camera.position.addInPlace(right.scale(speed));
-  }
 
   updateWeapon(dt);
   S.enemies.forEach(enemy => enemy.update(dt));
